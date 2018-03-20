@@ -4,6 +4,7 @@ import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.ImageView;
@@ -17,6 +18,10 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageView;
     private TextView textView;
     private JobScheduler jobScheduler;
+    private JobSchedulerService jobSchedulerService;
+    private JobInfo jobInfo;
+    private SharedPreferences sharedPreferences;
+    private static final String PREF_NAME = "SHARED_PREFS";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,16 +29,28 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         initViews();
+        sharedPreferences = getSharedPreferences(PREF_NAME, this.MODE_PRIVATE);
+
+        jobSchedulerService = new JobSchedulerService(sharedPreferences);
+
+        jobInfo = new JobInfo.Builder(1, new ComponentName(this, JobSchedulerService.class))
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPeriodic(3000)
+                .build();
 
         jobScheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        jobScheduler.schedule(jobInfo);
 
-        JobInfo.Builder builder = new
-                JobInfo.Builder(1, new ComponentName(getPackageName(),
-                JobSchedulerService.class.getName()));
+        updateView();
 
-        builder.setPeriodic(3000);
-        builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
+    }
 
+    private void updateView() {
+        if (sharedPreferences != null) {
+            if (sharedPreferences.getString("error_message", null) != null) {
+                textView.setText(sharedPreferences.getString("quote_title", null));
+            }
+        }
     }
 
     private void initViews() {
