@@ -1,11 +1,18 @@
 package com.anubhav.aro.dailymotivationalquotesnonmvp.util;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.support.v4.app.NotificationCompat;
 import android.widget.Toast;
 
+import com.anubhav.aro.dailymotivationalquotesnonmvp.R;
+import com.anubhav.aro.dailymotivationalquotesnonmvp.main.MainActivity;
 import com.anubhav.aro.dailymotivationalquotesnonmvp.model.QuoteObject;
 import com.anubhav.aro.dailymotivationalquotesnonmvp.model.Quotes;
 import com.anubhav.aro.dailymotivationalquotesnonmvp.rest.ApiInterface;
@@ -30,6 +37,12 @@ public class JobSchedulerService extends JobService {
 
 
     public JobSchedulerService() {
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        showNotification();
     }
 
     @Override
@@ -93,6 +106,26 @@ public class JobSchedulerService extends JobService {
         protected void onPostExecute(JobParameters jobParameters) {
             super.onPostExecute(jobParameters);
             jobService.jobFinished(jobParameters, false);
+
         }
+    }
+
+    private void showNotification() {
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+                .setAutoCancel(true)
+                .setSmallIcon(R.drawable.notification_icon)
+                .setContentTitle(getString(R.string.motivational_title))
+                .setContentText(getString(R.string.motivation_body));
+
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,
+                0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        notificationBuilder.setContentIntent(pendingIntent);
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        Notification notification = notificationBuilder.build();
+        notification.flags = Notification.FLAG_AUTO_CANCEL;
+        notificationManager.notify(0, notification);
     }
 }
